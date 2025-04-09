@@ -1,103 +1,110 @@
-import Image from "next/image";
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import Welcome from '../components/welcome';
+import QuantumSystemSelection from '../components/selection';
+import DetailedQuantumSelection from '../components/detail';
+import ExperimentConfig from '../components/config';
+import Results from '../components/results';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [currentSection, setCurrentSection] = useState('welcome');
+  const [animating, setAnimating] = useState(false);
+  const [direction, setDirection] = useState('forward');
+  const [prevSection, setPrevSection] = useState<string | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+  const sections = ['welcome', 'quantum-system', 'detailed-quantum', 'experiment-config', 'results'];
+
+  // Debug navigation changes
+  useEffect(() => {
+    console.log(`Navigation: ${prevSection || 'initial'} -> ${currentSection}`);
+  }, [currentSection, prevSection]);
+
+  const navigateTo = (section: string) => {
+    if (animating) {
+      console.log("Animation in progress, ignoring navigation request");
+      return;
+    }
+    
+    // Ensure section is one of the valid sections
+    if (!sections.includes(section)) {
+      console.error(`Invalid section: ${section}. Must be one of: ${sections.join(', ')}`);
+      return;
+    }
+    
+    // Determine direction based on section order
+    const currentIndex = sections.indexOf(currentSection);
+    const nextIndex = sections.indexOf(section);
+    const newDirection = nextIndex > currentIndex ? 'forward' : 'backward';
+    
+    console.log(`Starting navigation from ${currentSection} to ${section} (${newDirection})`);
+    
+    setDirection(newDirection);
+    setAnimating(true);
+    setPrevSection(currentSection);
+    
+    // Set a shorter timeout for faster transitions
+    setTimeout(() => {
+      setCurrentSection(section);
+      setTimeout(() => {
+        setAnimating(false);
+        console.log("Animation complete");
+      }, 400); // Reduced from 500
+    }, 300); // Reduced from 500
+  };
+
+  // Helper function to determine section classes
+  const getSectionClasses = (sectionName: string) => {
+    const baseClasses = "min-h-screen w-full absolute transition-all duration-400 ease-in-out";
+    
+    if (currentSection === sectionName) {
+      return `${baseClasses} opacity-100 translate-x-0 z-10`;
+    }
+    
+    const currentIndex = sections.indexOf(currentSection);
+    const sectionIndex = sections.indexOf(sectionName);
+    
+    if (direction === 'forward') {
+      if (sectionIndex < currentIndex) {
+        return `${baseClasses} opacity-0 -translate-x-full`;
+      } else {
+        return `${baseClasses} opacity-0 translate-x-full`;
+      }
+    } else { // backward
+      if (sectionIndex > currentIndex) {
+        return `${baseClasses} opacity-0 translate-x-full`;
+      } else {
+        return `${baseClasses} opacity-0 -translate-x-full`;
+      }
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-white text-black relative overflow-hidden">
+      {/* Welcome Section */}
+      <section className={getSectionClasses('welcome')}>
+        <Welcome onNavigate={navigateTo} />
+      </section>
+
+      {/* Quantum System Selection Section */}
+      <section className={getSectionClasses('quantum-system')}>
+        <QuantumSystemSelection onNavigate={navigateTo} />
+      </section>
+
+      {/* Detailed Quantum Selection Section */}
+      <section className={getSectionClasses('detailed-quantum')}>
+        <DetailedQuantumSelection onNavigate={navigateTo} />
+      </section>
+
+      {/* Experiment Configuration Section */}
+      <section className={getSectionClasses('experiment-config')}>
+        <ExperimentConfig onNavigate={navigateTo} />
+      </section>
+
+      {/* Results Section */}
+      <section className={getSectionClasses('results')}>
+        <Results onNavigate={navigateTo} />
+      </section>
+    </main>
   );
 }
