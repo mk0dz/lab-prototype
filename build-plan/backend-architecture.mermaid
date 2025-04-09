@@ -1,0 +1,40 @@
+flowchart TD
+    subgraph Frontend["Frontend (Next.js)"]
+        UI[User Interface]
+        VIZ[Visualization Layer]
+        CTRL[Experiment Controls]
+    end
+    
+    subgraph Backend["Backend (FastAPI)"]
+        API[REST API Endpoints]
+        QM[Quantum Modules Manager]
+        subgraph QModules["Quantum Modules"]
+            AM[Antimatter Module]
+            QK[Qiskit-Nature Adapter]
+            PL[Pennylane Adapter - Future]
+            CQ[Cirq Adapter - Future]
+        end
+        RES[Results Processor]
+        CACHE[Results Cache]
+    end
+    
+    subgraph Storage["Data Storage"]
+        DB[(SQLite/DB)]
+        FS[File Storage]
+    end
+    
+    subgraph Web3["Blockchain Integration - Stage 3"]
+        WC[Web3 Connector]
+        SC[Smart Contract]
+    end
+    
+    UI -- API Calls --> API
+    CTRL -- API Calls --> API
+    API --> QM
+    QM --> QModules
+    QModules --> RES
+    RES --> CACHE
+    RES --> FS
+    RES --> DB
+    API -- Results --> VIZ
+    CACHE -- Quick Retrieval --> API

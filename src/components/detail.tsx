@@ -9,12 +9,12 @@ interface DetailedQuantumSelectionProps {
 }
 
 export default function DetailedQuantumSelection({ onNavigate }: DetailedQuantumSelectionProps) {
-  const { systemData } = useQuantumSystem();
-  const selectedSystem = systemData.systemId;
+  const { systemData, updateSystemData } = useQuantumSystem();
+  const selectedSystem = systemData.systemId.toLowerCase();
   
   // Sample molecular data for additional information
   const molecularInfo = {
-    'H': {
+    'h': {
       fullName: 'Hydrogen',
       electronCount: 1,
       qubitRequirement: 2,
@@ -22,7 +22,7 @@ export default function DetailedQuantumSelection({ onNavigate }: DetailedQuantum
       symmetry: 'Spherical',
       description: 'The simplest atom with one proton and one electron. Ideal for basic quantum simulations.'
     },
-    'He': {
+    'he': {
       fullName: 'Helium',
       electronCount: 2,
       qubitRequirement: 4,
@@ -30,7 +30,7 @@ export default function DetailedQuantumSelection({ onNavigate }: DetailedQuantum
       symmetry: 'Spherical',
       description: 'Noble gas with a filled 1s orbital. Demonstrates electron pairing in quantum simulations.'
     },
-    'H2': {
+    'h2': {
       fullName: 'Hydrogen Molecule',
       electronCount: 2,
       qubitRequirement: 4,
@@ -38,7 +38,7 @@ export default function DetailedQuantumSelection({ onNavigate }: DetailedQuantum
       symmetry: 'D∞h',
       description: 'The simplest molecule with one covalent bond. A standard benchmark for quantum chemistry algorithms.'
     },
-    'LiH': {
+    'lih': {
       fullName: 'Lithium Hydride',
       electronCount: 4,
       qubitRequirement: 8,
@@ -46,18 +46,63 @@ export default function DetailedQuantumSelection({ onNavigate }: DetailedQuantum
       symmetry: 'C∞v',
       description: 'An ionic compound with interesting electronic structure. Commonly used to test quantum chemistry methods.'
     },
-    'H2O': {
+    'h2o': {
       fullName: 'Water',
       electronCount: 10,
       qubitRequirement: 14,
       bond: 'O-H: 0.96 Å',
       symmetry: 'C2v',
       description: 'Water molecule with bent geometry. Important for biological and chemical simulations.'
+    },
+    // Add the Mock adapter systems
+    'ch4': {
+      fullName: 'Methane',
+      electronCount: 10,
+      qubitRequirement: 14,
+      bond: 'C-H: 1.09 Å',
+      symmetry: 'Td',
+      description: 'Methane molecule with tetrahedral geometry.'
+    },
+    'nh3': {
+      fullName: 'Ammonia',
+      electronCount: 10,
+      qubitRequirement: 12,
+      bond: 'N-H: 1.01 Å',
+      symmetry: 'C3v',
+      description: 'Ammonia molecule with pyramidal geometry.'
+    },
+    'co2': {
+      fullName: 'Carbon Dioxide',
+      electronCount: 22,
+      qubitRequirement: 20,
+      bond: 'C=O: 1.16 Å',
+      symmetry: 'D∞h',
+      description: 'Carbon dioxide with linear geometry.'
     }
   };
   
   // Get the data for the selected system
-  const systemDetails = selectedSystem ? molecularInfo[selectedSystem as keyof typeof molecularInfo] || null : null;
+  const systemDetails = selectedSystem ? 
+    molecularInfo[selectedSystem as keyof typeof molecularInfo] || null : null;
+
+  // Handle navigation to next screen
+  const handleNextNavigation = () => {
+    // Initialize the configuration with reasonable defaults based on the system
+    const defaultConfig = {
+      algorithm: "VQE",
+      mapper: "JW",
+      ansatz: "TwoLocal",
+      hamiltonian: "Electronic Structure",
+      maxiter: 100
+    };
+    
+    // Update the configuration in the global state
+    updateSystemData({
+      configuration: defaultConfig
+    });
+    
+    onNavigate('experiment-config');
+  };
 
   return (
     <PageLayout>
@@ -117,7 +162,7 @@ export default function DetailedQuantumSelection({ onNavigate }: DetailedQuantum
       {/* Navigation */}
       <NavigationFooter
         onBack={() => onNavigate('quantum-system')}
-        onNext={() => onNavigate('experiment-config')}
+        onNext={handleNextNavigation}
         nextLabel="Next: Configure Experiment"
         nextDisabled={!selectedSystem}
       />

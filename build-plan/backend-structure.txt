@@ -1,0 +1,33 @@
+backend/
+├── main.py                      # FastAPI entry point
+├── requirements.txt             # Python dependencies
+├── config.py                    # Configuration settings
+├── db/                          # Database models and utilities  
+│   ├── __init__.py
+│   ├── models.py                # SQLAlchemy models
+│   └── database.py              # Database connection
+├── api/                         # API endpoints
+│   ├── __init__.py
+│   ├── routes/
+│   │   ├── __init__.py
+│   │   ├── systems.py           # Quantum system endpoints
+│   │   ├── experiments.py       # Experiment configuration and execution
+│   │   ├── results.py           # Results retrieval and processing
+│   │   └── publishing.py        # Blockchain publishing (Stage 3)
+│   └── dependencies.py          # FastAPI dependencies
+├── schemas/                     # Pydantic models for data validation
+│   ├── __init__.py
+│   ├── systems.py
+│   ├── experiments.py
+│   └── results.py
+├── quantum/                     # Quantum computing core
+│   ├── __init__.py
+│   ├── manager.py               # Quantum Modules Manager
+│   ├── results_processor.py     # Results processing utilities
+│   └── modules/                 # Quantum computation modules
+│       ├── __init__.py
+│       ├── antimatter.py        # Your custom antimatter module
+│       └── qiskit_adapter.py    # Qiskit-Nature integration
+└── utils/                       # Utility functions
+    ├── __init__.py
+    └── helpers.py
