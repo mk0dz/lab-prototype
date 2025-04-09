@@ -73,7 +73,7 @@ export default function ExperimentConfig({ onNavigate }: ExperimentConfigProps) 
         subtitle="Step 3/4"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 overflow-y-auto max-h-screen">
         {/* Left Column - Main Options */}
         <div className="md:col-span-2 space-y-6">
           {/* Ansatz Section */}
