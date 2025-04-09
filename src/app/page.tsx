@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+// Import improved components
 import Welcome from '../components/welcome';
 import QuantumSystemSelection from '../components/selection';
 import DetailedQuantumSelection from '../components/detail';
 import ExperimentConfig from '../components/config';
 import Results from '../components/results';
+import { QuantumProvider } from '../components/context';
 
 export default function Home() {
   const [currentSection, setCurrentSection] = useState('welcome');
@@ -49,13 +51,13 @@ export default function Home() {
       setTimeout(() => {
         setAnimating(false);
         console.log("Animation complete");
-      }, 400); // Reduced from 500
-    }, 300); // Reduced from 500
+      }, 300); // Reduced from 400
+    }, 200); // Reduced from 300
   };
 
   // Helper function to determine section classes
   const getSectionClasses = (sectionName: string) => {
-    const baseClasses = "min-h-screen w-full absolute transition-all duration-400 ease-in-out";
+    const baseClasses = "h-screen w-full absolute top-0 left-0 right-0 transition-all duration-300 ease-in-out";
     
     if (currentSection === sectionName) {
       return `${baseClasses} opacity-100 translate-x-0 z-10`;
@@ -66,45 +68,47 @@ export default function Home() {
     
     if (direction === 'forward') {
       if (sectionIndex < currentIndex) {
-        return `${baseClasses} opacity-0 -translate-x-full`;
+        return `${baseClasses} opacity-0 -translate-x-full z-0 pointer-events-none`;
       } else {
-        return `${baseClasses} opacity-0 translate-x-full`;
+        return `${baseClasses} opacity-0 translate-x-full z-0 pointer-events-none`;
       }
     } else { // backward
       if (sectionIndex > currentIndex) {
-        return `${baseClasses} opacity-0 translate-x-full`;
+        return `${baseClasses} opacity-0 translate-x-full z-0 pointer-events-none`;
       } else {
-        return `${baseClasses} opacity-0 -translate-x-full`;
+        return `${baseClasses} opacity-0 -translate-x-full z-0 pointer-events-none`;
       }
     }
   };
 
   return (
-    <main className="min-h-screen bg-white text-black relative overflow-hidden">
-      {/* Welcome Section */}
-      <section className={getSectionClasses('welcome')}>
-        <Welcome onNavigate={navigateTo} />
-      </section>
+    <QuantumProvider>
+      <main className="h-screen w-full bg-white text-black relative font-sans">
+        {/* Welcome Section */}
+        <section className={getSectionClasses('welcome')}>
+          <Welcome onNavigate={navigateTo} />
+        </section>
 
-      {/* Quantum System Selection Section */}
-      <section className={getSectionClasses('quantum-system')}>
-        <QuantumSystemSelection onNavigate={navigateTo} />
-      </section>
+        {/* Quantum System Selection Section */}
+        <section className={getSectionClasses('quantum-system')}>
+          <QuantumSystemSelection onNavigate={navigateTo} />
+        </section>
 
-      {/* Detailed Quantum Selection Section */}
-      <section className={getSectionClasses('detailed-quantum')}>
-        <DetailedQuantumSelection onNavigate={navigateTo} />
-      </section>
+        {/* Detailed Quantum Selection Section */}
+        <section className={getSectionClasses('detailed-quantum')}>
+          <DetailedQuantumSelection onNavigate={navigateTo} />
+        </section>
 
-      {/* Experiment Configuration Section */}
-      <section className={getSectionClasses('experiment-config')}>
-        <ExperimentConfig onNavigate={navigateTo} />
-      </section>
+        {/* Experiment Configuration Section */}
+        <section className={getSectionClasses('experiment-config')}>
+          <ExperimentConfig onNavigate={navigateTo} />
+        </section>
 
-      {/* Results Section */}
-      <section className={getSectionClasses('results')}>
-        <Results onNavigate={navigateTo} />
-      </section>
-    </main>
+        {/* Results Section */}
+        <section className={getSectionClasses('results')}>
+          <Results onNavigate={navigateTo} />
+        </section>
+      </main>
+    </QuantumProvider>
   );
 }

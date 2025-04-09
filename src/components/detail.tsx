@@ -1,87 +1,126 @@
-import React, { useState } from 'react';
-import QuantumVisualization from './visualization';
+// src/components/detail.tsx
+import React from 'react';
+import { PageLayout, SectionTitle, Card, NavigationFooter } from './design-system';
+import QuantumVisualizationComponent from './visualization';
+import { useQuantumSystem } from './context';
 
 interface DetailedQuantumSelectionProps {
   onNavigate: (section: string) => void;
 }
 
 export default function DetailedQuantumSelection({ onNavigate }: DetailedQuantumSelectionProps) {
-  const [selectedSystem, setSelectedSystem] = useState<string>('');
+  const { systemData } = useQuantumSystem();
+  const selectedSystem = systemData.systemId;
+  
+  // Sample molecular data for additional information
+  const molecularInfo = {
+    'H': {
+      fullName: 'Hydrogen',
+      electronCount: 1,
+      qubitRequirement: 2,
+      bond: null,
+      symmetry: 'Spherical',
+      description: 'The simplest atom with one proton and one electron. Ideal for basic quantum simulations.'
+    },
+    'He': {
+      fullName: 'Helium',
+      electronCount: 2,
+      qubitRequirement: 4,
+      bond: null,
+      symmetry: 'Spherical',
+      description: 'Noble gas with a filled 1s orbital. Demonstrates electron pairing in quantum simulations.'
+    },
+    'H2': {
+      fullName: 'Hydrogen Molecule',
+      electronCount: 2,
+      qubitRequirement: 4,
+      bond: '0.74 Å',
+      symmetry: 'D∞h',
+      description: 'The simplest molecule with one covalent bond. A standard benchmark for quantum chemistry algorithms.'
+    },
+    'LiH': {
+      fullName: 'Lithium Hydride',
+      electronCount: 4,
+      qubitRequirement: 8,
+      bond: '1.60 Å',
+      symmetry: 'C∞v',
+      description: 'An ionic compound with interesting electronic structure. Commonly used to test quantum chemistry methods.'
+    },
+    'H2O': {
+      fullName: 'Water',
+      electronCount: 10,
+      qubitRequirement: 14,
+      bond: 'O-H: 0.96 Å',
+      symmetry: 'C2v',
+      description: 'Water molecule with bent geometry. Important for biological and chemical simulations.'
+    }
+  };
+  
+  // Get the data for the selected system
+  const systemDetails = selectedSystem ? molecularInfo[selectedSystem as keyof typeof molecularInfo] || null : null;
 
   return (
-    <div className="min-h-screen w-full py-6 px-4">
-      <div className="flex justify-between items-center mb-8 border-b pb-2">
-        <h2 className="text-2xl">Select Quantum Systems</h2>
-        <div className="text-lg">Level: 2</div>
-      </div>
+    <PageLayout>
+      <div className="overflow-container">
+        <SectionTitle 
+          title="System Visualization & Properties" 
+          subtitle="Step 2/4"
+        />
 
-      <div className="mb-4">
-        <h3 className="text-xl mb-4">He+1</h3>
-        <div className="flex justify-between gap-6 mb-8">
-          <div className="w-1/3 border border-black rounded-sm p-4 flex items-center justify-center" 
-               onClick={() => setSelectedSystem('H')}>
-            <div className="text-center">
-              <div className="flex justify-center mb-2">
-                <div className="relative">
-                  <div className="w-20 h-20 rounded-full border border-black"></div>
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-black"></div>
-                </div>
-              </div>
-              <div>H</div>
-            </div>
+        {/* Main Content */}
+        <div className="flex flex-col h-[calc(100vh-240px)]">
+          {/* Main Visualization Area - Takes up most of the height */}
+          <div className="flex-grow overflow-auto">
+            {selectedSystem ? (
+              <QuantumVisualizationComponent />
+            ) : (
+              <Card className="flex items-center justify-center h-64 text-gray-500">
+                <p>No system selected. Please go back and select a quantum system.</p>
+              </Card>
+            )}
           </div>
           
-          <div className="w-1/3 border border-black rounded-sm p-4 flex items-center justify-center"
-               onClick={() => setSelectedSystem('He')}>
-            <div className="text-center">
-              <div className="flex justify-center mb-2">
-                <div className="relative">
-                  <div className="w-20 h-20 rounded-full border border-black"></div>
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-black"></div>
-                  <div className="absolute top-[40%] left-[60%] w-2 h-2 rounded-full bg-blue-500"></div>
-                  <div className="absolute top-[60%] left-[40%] w-2 h-2 rounded-full bg-blue-500"></div>
+          {/* Additional Information Panel - Fixed at bottom */}
+          {selectedSystem && systemDetails && (
+            <Card className="mt-4 p-4 bg-gray-50 border-t border-gray-200">
+              <div className="font-mono text-sm max-w-3xl mx-auto">
+                <div className="flex flex-wrap gap-4 justify-center">
+                  <div className="flex items-center">
+                    <span className="font-bold mr-2">System:</span>
+                    <span className="bg-black text-white px-2 py-1 rounded">{selectedSystem}</span>
+                    {systemDetails.fullName && <span className="ml-2">{systemDetails.fullName}</span>}
+                  </div>
+                  
+                  <div>
+                    <span className="font-bold mr-2">Qubits:</span>
+                    <span>{systemDetails.qubitRequirement}</span>
+                  </div>
+                  
+                  <div>
+                    <span className="font-bold mr-2">Electrons:</span>
+                    <span>{systemDetails.electronCount}</span>
+                  </div>
+                  
+                  {systemDetails.bond && (
+                    <div>
+                      <span className="font-bold mr-2">Bond:</span>
+                      <span>{systemDetails.bond}</span>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div>He</div>
-            </div>
-          </div>
-          
-          <div className="w-1/3 border border-black rounded-sm p-4 flex items-center justify-center"
-               onClick={() => setSelectedSystem('molecule')}>
-            <div className="text-center">
-              <div>Molecular Stack</div>
-              <div className="flex justify-center mt-2">
-                <div className="relative flex items-center">
-                  <div className="w-10 h-10 rounded-full border border-black"></div>
-                  <div className="w-12 h-1 bg-black"></div>
-                  <div className="w-10 h-10 rounded-full border border-black"></div>
-                </div>
-              </div>
-            </div>
-          </div>
+            </Card>
+          )}
         </div>
       </div>
       
-      <div className="border border-black p-6 mb-8">
-        <h3 className="text-xl mb-4">Quantum System Information Here</h3>
-        <QuantumVisualization systemType={selectedSystem} />
-      </div>
-      
-      <div className="mt-4 flex justify-between">
-        <button 
-          onClick={() => onNavigate('quantum-system')} 
-          className="bg-gray-200 px-6 py-2"
-        >
-          Back
-        </button>
-        <button 
-          onClick={() => onNavigate('experiment-config')} 
-          className="bg-black text-white px-6 py-2"
-          disabled={!selectedSystem}
-        >
-          Next: Configure Experiment
-        </button>
-      </div>
-    </div>
+      {/* Navigation */}
+      <NavigationFooter
+        onBack={() => onNavigate('quantum-system')}
+        onNext={() => onNavigate('experiment-config')}
+        nextLabel="Next: Configure Experiment"
+        nextDisabled={!selectedSystem}
+      />
+    </PageLayout>
   );
 }
