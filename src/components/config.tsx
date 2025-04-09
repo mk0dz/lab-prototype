@@ -73,7 +73,7 @@ export default function ExperimentConfig({ onNavigate }: ExperimentConfigProps) 
         subtitle="Step 3/4"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 overflow-y-auto max-h-screen">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 overflow-y-auto max-h-[calc(100vh-10rem)]">
         {/* Left Column - Main Options */}
         <div className="md:col-span-2 space-y-6">
           {/* Ansatz Section */}
@@ -211,6 +211,23 @@ export default function ExperimentConfig({ onNavigate }: ExperimentConfigProps) 
               </button>
             </div>
           </Card>
+
+          {/* Circuit Visualization */}
+            <Card className="mb-6">
+              <h3 className="text-xl font-serif mb-4">Circuit Preview</h3>
+              <div className="border border-gray-200 bg-gray-50 h-40 flex items-center justify-center">
+                {isConfigComplete ? (
+                  <div className="text-center font-mono">
+                    <p>Circuit visualization would appear here</p>
+                    <p className="text-sm text-gray-500 mt-2">(Based on selected ansatz, mapper, and algorithm)</p>
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500">
+                    <p>Complete the configuration to preview the quantum circuit</p>
+                  </div>
+                )}
+              </div>
+            </Card>
           
           {/* Advanced Options (collapsible) */}
           {advancedOptions && (
@@ -250,22 +267,7 @@ export default function ExperimentConfig({ onNavigate }: ExperimentConfigProps) 
         </div>
       </div>
       
-      {/* Circuit Visualization */}
-      <Card className="mb-6">
-        <h3 className="text-xl font-serif mb-4">Circuit Preview</h3>
-        <div className="border border-gray-200 bg-gray-50 h-40 flex items-center justify-center">
-          {isConfigComplete ? (
-            <div className="text-center font-mono">
-              <p>Circuit visualization would appear here</p>
-              <p className="text-sm text-gray-500 mt-2">(Based on selected ansatz, mapper, and algorithm)</p>
-            </div>
-          ) : (
-            <div className="text-center text-gray-500">
-              <p>Complete the configuration to preview the quantum circuit</p>
-            </div>
-          )}
-        </div>
-      </Card>
+      
       
       {/* Navigation */}
       <NavigationFooter

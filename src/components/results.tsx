@@ -7,13 +7,6 @@ interface ResultsProps {
 }
 
 export default function Results({ onNavigate }: ResultsProps) {
-  const [resultData, setResultData] = useState({
-    uploaded: false,
-    ipfsId: '',
-    published: false,
-    transactionId: ''
-  });
-  
   // Simulated experiment results
   const experimentResults = {
     name: "Hydrogen Molecule (H₂)",
@@ -33,36 +26,12 @@ export default function Results({ onNavigate }: ResultsProps) {
     runtime: "2.3 seconds",
     convergence: "1.2e-5"
   };
-  
-  // Simulate upload to IPFS
-  const handleUpload = () => {
-    // Simulate processing
-    setTimeout(() => {
-      setResultData({
-        ...resultData,
-        uploaded: true,
-        ipfsId: 'Qm' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-      });
-    }, 1500);
-  };
-  
-  // Simulate publishing to blockchain
-  const handlePublish = () => {
-    // Simulate processing
-    setTimeout(() => {
-      setResultData({
-        ...resultData,
-        published: true,
-        transactionId: '0x' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-      });
-    }, 1500);
-  };
 
   return (
     <PageLayout>
       <SectionTitle 
         title="Experiment Results" 
-        subtitle="Step 4/4"
+        subtitle="Step 4/5"
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -71,7 +40,7 @@ export default function Results({ onNavigate }: ResultsProps) {
           <h3 className="text-xl font-serif mb-4">Experiment Summary</h3>
           
           <div className="space-y-3 font-mono">
-            <div className="grid grid-cols-2 gap-2 border-b pb-2">
+            <div className="grid grid-cols-2 gap-2 border-b border-black pb-2">
               <div className="font-bold">System:</div>
               <div>{experimentResults.name}</div>
               
@@ -79,7 +48,7 @@ export default function Results({ onNavigate }: ResultsProps) {
               <div>{experimentResults.date}</div>
             </div>
             
-            <div className="grid grid-cols-2 gap-2 border-b pb-2">
+            <div className="grid grid-cols-2 gap-2 border-b border-black pb-2">
               <div className="font-bold">Ansatz:</div>
               <div>{experimentResults.configuration.ansatz}</div>
               
@@ -107,7 +76,7 @@ export default function Results({ onNavigate }: ResultsProps) {
           
           <div className="mt-6">
             <h4 className="text-lg font-serif mb-3">Abstract</h4>
-            <div className="border border-gray-300 p-3 bg-gray-50 text-sm">
+            <div className="border border-black p-3 bg-gray-50 text-sm">
               <p>
                 This experiment simulated the ground state energy of a hydrogen molecule (H₂) 
                 using the Variational Quantum Eigensolver (VQE) algorithm with a UCCSD ansatz. 
@@ -123,21 +92,21 @@ export default function Results({ onNavigate }: ResultsProps) {
         <Card>
           <h3 className="text-xl font-serif mb-4">Energy Results</h3>
           
-          <div className="border border-gray-200 bg-gray-50 h-64 flex items-center justify-center mb-4">
+          <div className="border border-black bg-gray-50 h-64 flex items-center justify-center mb-4">
             {/* Energy diagram placeholder */}
             <div className="w-full h-full flex flex-col items-center justify-center relative p-6">
-              <div className="absolute left-12 top-0 bottom-0 w-px bg-gray-400"></div>
-              <div className="absolute left-0 right-0 bottom-12 h-px bg-gray-400"></div>
+              <div className="absolute left-12 top-0 bottom-0 w-px bg-black"></div>
+              <div className="absolute left-0 right-0 bottom-12 h-px bg-black"></div>
               
               {/* Energy level marker */}
               <div className="absolute" style={{ left: '80px', bottom: '90px' }}>
-                <div className="w-32 h-px bg-blue-500"></div>
+                <div className="w-32 h-px bg-black"></div>
                 <div className="text-xs font-mono mt-1">Ground state: {experimentResults.energy.ground} Ha</div>
               </div>
               
               {/* Reference energy marker */}
               <div className="absolute" style={{ left: '80px', bottom: '110px' }}>
-                <div className="w-32 h-px bg-red-500"></div>
+                <div className="w-32 h-px bg-gray-600"></div>
                 <div className="text-xs font-mono mt-1">Reference: {experimentResults.energy.reference} Ha</div>
               </div>
               
@@ -153,7 +122,7 @@ export default function Results({ onNavigate }: ResultsProps) {
                 <path 
                   d="M0,80 C20,70 40,40 60,25 C80,15 100,12 120,10 C140,9 160,8 180,8" 
                   fill="none" 
-                  stroke="blue" 
+                  stroke="black" 
                   strokeWidth="2"
                 />
               </svg>
@@ -174,70 +143,33 @@ export default function Results({ onNavigate }: ResultsProps) {
         </Card>
       </div>
       
-      {/* Blockchain Publishing Section */}
+      {/* Action Options */}
       <Card className="mb-6">
-        <h3 className="text-xl font-serif mb-4">Blockchain Publication</h3>
+        <h3 className="text-xl font-serif mb-4">Next Steps</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* IPFS Upload */}
-          <div className="border border-gray-200 p-4">
-            <h4 className="text-lg font-serif mb-3">IPFS Storage</h4>
-            <div className="mb-4 font-mono text-sm">
-              {resultData.uploaded ? (
-                <div className="bg-green-50 border border-green-200 p-3">
-                  <p className="font-bold text-green-800">Results uploaded successfully!</p>
-                  <p className="mt-2">IPFS ID: <span className="font-bold">{resultData.ipfsId}</span></p>
-                </div>
-              ) : (
-                <p>Upload your experimental data to IPFS for permanent storage and sharing.</p>
-              )}
-            </div>
-            <Button 
-              onClick={handleUpload} 
-              disabled={resultData.uploaded}
-              className="w-full"
-            >
-              {resultData.uploaded ? 'Uploaded' : 'Upload to IPFS'}
+          <div className="border border-black p-4">
+            <h4 className="text-lg font-serif mb-3">Analysis Options</h4>
+            <p className="mb-4 font-mono text-sm">
+              Explore additional analysis options, including orbital visualization, 
+              bond analysis, and comparison to experimental data.
+            </p>
+            <Button className="w-full">
+              Advanced Analysis
             </Button>
           </div>
           
-          {/* Blockchain Publication */}
-          <div className="border border-gray-200 p-4">
-            <h4 className="text-lg font-serif mb-3">Blockchain Publication</h4>
-            <div className="mb-4 font-mono text-sm">
-              {resultData.published ? (
-                <div className="bg-green-50 border border-green-200 p-3">
-                  <p className="font-bold text-green-800">Results published on blockchain!</p>
-                  <p className="mt-2">Transaction: <span className="font-bold">{resultData.transactionId}</span></p>
-                </div>
-              ) : (
-                <p>Publish your experimental data to blockchain for verification and authentication.</p>
-              )}
-            </div>
+          <div className="border border-black p-4">
+            <h4 className="text-lg font-serif mb-3">Publish Results</h4>
+            <p className="mb-4 font-mono text-sm">
+              Store your experimental data permanently on IPFS and verify it on blockchain
+              for scientific record-keeping and sharing.
+            </p>
             <Button 
-              onClick={handlePublish} 
-              disabled={!resultData.uploaded || resultData.published}
+              onClick={() => onNavigate('publishing')} 
               className="w-full"
             >
-              {resultData.published ? 'Published' : 'Publish to Blockchain'}
-            </Button>
-          </div>
-        </div>
-        
-        <div className="mt-6 border-t pt-4">
-          <h4 className="text-lg font-serif mb-3">Sharing Options</h4>
-          <div className="flex space-x-4">
-            <input 
-              type="text" 
-              readOnly
-              value={resultData.ipfsId ? `https://ipfs.io/ipfs/${resultData.ipfsId}` : 'Experiment URL will appear here after upload'}
-              className="flex-1 border border-gray-300 px-3 py-2 bg-gray-50"
-            />
-            <Button 
-              onClick={() => {/* Clipboard copy would go here */}}
-              disabled={!resultData.ipfsId}
-            >
-              Copy Link
+              Publish to Blockchain
             </Button>
           </div>
         </div>
@@ -246,8 +178,8 @@ export default function Results({ onNavigate }: ResultsProps) {
       {/* Navigation */}
       <NavigationFooter
         onBack={() => onNavigate('experiment-config')}
-        onNext={() => onNavigate('welcome')}
-        nextLabel="New Experiment"
+        onNext={() => onNavigate('publishing')}
+        nextLabel="Proceed to Publishing"
         backLabel="Back to Config"
       />
     </PageLayout>

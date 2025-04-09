@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-// Import improved components
+// Import components
 import Welcome from '../components/welcome';
 import QuantumSystemSelection from '../components/selection';
 import DetailedQuantumSelection from '../components/detail';
 import ExperimentConfig from '../components/config';
 import Results from '../components/results';
+import Publishing from '../components/publishing';
 import { QuantumProvider } from '../components/context';
 
 export default function Home() {
@@ -15,7 +16,8 @@ export default function Home() {
   const [direction, setDirection] = useState('forward');
   const [prevSection, setPrevSection] = useState<string | null>(null);
 
-  const sections = ['welcome', 'quantum-system', 'detailed-quantum', 'experiment-config', 'results'];
+  // Updated sections array to include publishing
+  const sections = ['welcome', 'quantum-system', 'detailed-quantum', 'experiment-config', 'results', 'publishing'];
 
   // Debug navigation changes
   useEffect(() => {
@@ -57,7 +59,7 @@ export default function Home() {
 
   // Helper function to determine section classes
   const getSectionClasses = (sectionName: string) => {
-    const baseClasses = "h-screen w-full absolute top-0 left-0 right-0 transition-all duration-300 ease-in-out";
+    const baseClasses = "h-full w-full absolute top-0 left-0 right-0 transition-all duration-300 ease-in-out overflow-hidden";
     
     if (currentSection === sectionName) {
       return `${baseClasses} opacity-100 translate-x-0 z-10`;
@@ -83,7 +85,7 @@ export default function Home() {
 
   return (
     <QuantumProvider>
-      <main className="h-screen w-full bg-white text-black relative font-sans">
+      <main className="h-screen w-full bg-white text-black relative font-sans overflow-hidden">
         {/* Welcome Section */}
         <section className={getSectionClasses('welcome')}>
           <Welcome onNavigate={navigateTo} />
@@ -107,6 +109,11 @@ export default function Home() {
         {/* Results Section */}
         <section className={getSectionClasses('results')}>
           <Results onNavigate={navigateTo} />
+        </section>
+        
+        {/* Publishing Section - New */}
+        <section className={getSectionClasses('publishing')}>
+          <Publishing onNavigate={navigateTo} />
         </section>
       </main>
     </QuantumProvider>

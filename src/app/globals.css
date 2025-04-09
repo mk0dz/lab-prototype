@@ -37,6 +37,8 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Times New Roman', serif;
   line-height: 1.2;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
 }
 
 .container {
@@ -56,7 +58,9 @@ h1, h2, h3, h4, h5, h6 {
   flex-direction: column;
   justify-content: flex-start;
   width: 100%;
-  padding-bottom: 5rem; /* Space for fixed navigation */
+  height: 100%;
+  overflow: hidden;
+  padding-bottom: 4rem; /* Space for fixed navigation */
 }
 
 .button-container {
@@ -127,6 +131,15 @@ h1, h2, h3, h4, h5, h6 {
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+/* Full height/width container with no scrollbar */
+.full-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* Animation classes */
@@ -223,6 +236,26 @@ h1, h2, h3, h4, h5, h6 {
   height: 6px;
   border-radius: 50%;
   background-color: blue;
+}
+
+/* Scrollable container with clean scrollbars when needed */
+.scrollable {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollable::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
 }
 
 /* Media queries for better responsive layout */
