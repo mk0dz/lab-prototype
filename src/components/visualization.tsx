@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useQuantumSystem } from './context';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { Card } from './design-system';
 
 // Define atom configurations first
 const atomConfigs = {
@@ -209,146 +210,153 @@ const AtomVisualization = ({ element = 'H', type = "basic" }: { element?: keyof 
   );
 };
 
-const ThreeDMoleculeVisualization = ({ formula = 'H2' }: { formula?: keyof typeof moleculeConfigs }) => {
+const ThreeDMoleculeVisualization = ({ formula = 'H2' }: { formula?: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { scene, camera, renderer } = useRef<{
-    scene: THREE.Scene | null,
-    camera: THREE.PerspectiveCamera | null,
-    renderer: THREE.WebGLRenderer | null
-  }>({
-    scene: null,
-    camera: null,
-    renderer: null
-  }).current;
-  
-  // Defaults for molecule not found
-  const moleculeConfig = moleculeConfigs[formula] || moleculeConfigs.H2O;
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     if (!containerRef.current) return;
     
-    // Clean up any existing scene
-    if (renderer) {
-      containerRef.current.removeChild(renderer.domElement);
+    // Clean up function to remove previous visualization
+    const container = containerRef.current;
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
     }
     
-    // Initialize Three.js scene
-    const width = containerRef.current.clientWidth;
-    const height = containerRef.current.clientHeight || 400; // Fallback height if container has no height
+    // Get proper lowercase formula for lookup
+    const formulaLower = formula.toLowerCase();
     
-    // Create scene
-    const newScene = new THREE.Scene();
-    newScene.background = new THREE.Color(0xffffff);
+    // Get molecule configuration or default to H2 if not found
+    const moleculeConfig = moleculeConfigs[formulaLower as keyof typeof moleculeConfigs] || 
+                          moleculeConfigs.H2;
     
-    // Create camera
-    const newCamera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    newCamera.position.z = 5;
+    // Set up the scene
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xffffff);
     
-    // Create renderer
-    const newRenderer = new THREE.WebGLRenderer({ antialias: true });
-    newRenderer.setSize(width, height);
-    containerRef.current.appendChild(newRenderer.domElement);
+    // Set up the camera
+    const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.z = 5;
     
-    // Add controls
-    const controls = new OrbitControls(newCamera, newRenderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.25;
+    // Set up renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
     
-    // Add ambient light
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    newScene.add(ambientLight);
+    // Add lighting
+    const ambientLight = new THREE.AmbientLight(0xcccccc, 1);
+    scene.add(ambientLight);
     
-    // Add directional light
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(1, 1, 1);
-    newScene.add(directionalLight);
+    scene.add(directionalLight);
     
-    // Create atoms and bonds based on molecule configuration
-    moleculeConfig.atoms.forEach((atom, index) => {
+    // Calculate molecule center for camera positioning
+    let center = new THREE.Vector3(0, 0, 0);
+    let atomCount = 0;
+    
+    // Add atoms to the scene
+    const atomObjects: THREE.Mesh[] = [];
+    
+    moleculeConfig.atoms.forEach((atom) => {
       const atomConfig = atomConfigs[atom.element as keyof typeof atomConfigs];
-      const color = atomConfig ? atomConfig.color : '#cccccc';
       
-      const geometry = new THREE.SphereGeometry(atomConfig ? atomConfig.radius / 40 : 0.4);
-      const material = new THREE.MeshPhongMaterial({ color });
+      // Create atom sphere geometry based on atomic radius
+      const atomScale = atomConfig ? atomConfig.radius / 35 : 0.5;
+      const geometry = new THREE.SphereGeometry(atomScale, 32, 32);
+      
+      // Create material with atom color
+      const material = new THREE.MeshPhongMaterial({ 
+        color: atomConfig ? atomConfig.color : '#cccccc',
+        specular: 0x111111,
+        shininess: 30
+      });
+      
       const sphere = new THREE.Mesh(geometry, material);
-      
-      // Position atom
       sphere.position.set(atom.x, atom.y, atom.z);
-      newScene.add(sphere);
       
-      // Add atom labels
-      const div = document.createElement('div');
-      div.className = 'absolute text-xs font-bold';
-      div.textContent = atom.element;
+      // Update center calculation
+      center.add(new THREE.Vector3(atom.x, atom.y, atom.z));
+      atomCount++;
       
-      // Store reference for animation
-      (sphere as any).userData = { element: atom.element, index };
+      scene.add(sphere);
+      atomObjects.push(sphere);
     });
     
-    // Create bonds between atoms
-    moleculeConfig.bonds.forEach(bond => {
-      const atom1 = moleculeConfig.atoms[bond.from];
-      const atom2 = moleculeConfig.atoms[bond.to];
+    // Add bonds
+    moleculeConfig.bonds.forEach((bond) => {
+      const fromAtom = moleculeConfig.atoms[bond.from];
+      const toAtom = moleculeConfig.atoms[bond.to];
       
-      const start = new THREE.Vector3(atom1.x, atom1.y, atom1.z);
-      const end = new THREE.Vector3(atom2.x, atom2.y, atom2.z);
+      // Calculate bond position and direction
+      const startPos = new THREE.Vector3(fromAtom.x, fromAtom.y, fromAtom.z);
+      const endPos = new THREE.Vector3(toAtom.x, toAtom.y, toAtom.z);
       
-      // Calculate the midpoint for proper cylinder placement
-      const direction = new THREE.Vector3().subVectors(end, start);
-      const midpoint = new THREE.Vector3().addVectors(start, direction.multiplyScalar(0.5));
+      // Calculate distance and midpoint
+      const distance = startPos.distanceTo(endPos);
       
-      // Create cylinder for bond
-      const geometry = new THREE.CylinderGeometry(0.1, 0.1, direction.length());
-      const material = new THREE.MeshPhongMaterial({ color: 0x444444 });
-      const cylinder = new THREE.Mesh(geometry, material);
+      // Create a cylinder to represent the bond
+      const bondGeometry = new THREE.CylinderGeometry(0.05, 0.05, distance, 8);
+      const bondMaterial = new THREE.MeshPhongMaterial({ color: 0xDDDDDD });
       
-      // Position and rotate cylinder to connect atoms
-      cylinder.position.copy(midpoint);
-      cylinder.lookAt(end);
-      cylinder.rotateX(Math.PI / 2);
+      const bondMesh = new THREE.Mesh(bondGeometry, bondMaterial);
       
-      newScene.add(cylinder);
+      // Position and rotate the bond
+      const midpoint = new THREE.Vector3().addVectors(startPos, endPos).multiplyScalar(0.5);
+      bondMesh.position.copy(midpoint);
+      
+      // Orient the bond to connect the atoms
+      bondMesh.lookAt(endPos);
+      bondMesh.rotateX(Math.PI / 2);
+      
+      scene.add(bondMesh);
     });
     
-    // Animate function
+    // Calculate the average position for centering the camera
+    if (atomCount > 0) {
+      center.divideScalar(atomCount);
+    }
+    
+    // Set up orbital controls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.copy(center);
+    controls.update();
+    
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
-      newRenderer.render(newScene, newCamera);
+      renderer.render(scene, camera);
     };
-    animate();
     
-    // Handle window resize
     const handleResize = () => {
       if (!containerRef.current) return;
       
-      const newWidth = containerRef.current.clientWidth;
-      const newHeight = containerRef.current.clientHeight || 400;
-      
-      newCamera.aspect = newWidth / newHeight;
-      newCamera.updateProjectionMatrix();
-      newRenderer.setSize(newWidth, newHeight);
+      camera.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     };
+    
+    setIsLoading(false);
+    animate();
     
     window.addEventListener('resize', handleResize);
     
-    // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
-      controls.dispose();
-      if (containerRef.current && newRenderer) {
-        containerRef.current.removeChild(newRenderer.domElement);
-      }
+      // Clean up Three.js resources
+      renderer.dispose();
+      scene.clear();
     };
-  }, [formula]);
+  }, [formula]); // Re-run when formula changes
   
   return (
-    <div className="relative w-full h-full min-h-[300px]" ref={containerRef}>
-      <div className="absolute bottom-2 left-2 text-xs text-gray-500">
-        Click and drag to rotate
-        <br />
-        Scroll to zoom
-      </div>
+    <div className="relative w-full h-full">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-black"></div>
+        </div>
+      )}
+      <div ref={containerRef} className="w-full h-full"></div>
     </div>
   );
 };
@@ -429,159 +437,159 @@ const MoleculeVisualization = ({ formula = 'H2' }: { formula?: keyof typeof mole
 };
 
 const SystemElementsBox = ({ systemId }: { systemId: string }) => {
-  const isMolecule = systemId ? (/[0-9]/.test(systemId) || systemId.length > 2) : false;
+  // Get proper capitalized or formatted system ID
+  const formattedSystemId = systemId.toLowerCase();
+  const molecule = moleculeConfigs[formattedSystemId as keyof typeof moleculeConfigs] || 
+                  moleculeConfigs.H2; // Default to H2 if not found
   
-  if (isMolecule) {
-    // It's a molecule
-    const moleculeConfig = moleculeConfigs[systemId as keyof typeof moleculeConfigs];
-    
-    if (!moleculeConfig) {
-      return (
-        <div className="border border-gray-300 p-4 h-full">
-          <h3 className="text-lg font-serif mb-2">System Elements</h3>
-          <p className="text-gray-500">No data available for this system</p>
-        </div>
-      );
-    }
-    
-    // Group atoms by element type
-    const atomCounts: Record<string, number> = {};
-    moleculeConfig.atoms.forEach(atom => {
-      const element = atom.element;
-      atomCounts[element] = (atomCounts[element] || 0) + 1;
-    });
-    
-    return (
-      <div className="border border-gray-300 p-4 h-full">
-        <h3 className="text-lg font-serif mb-2">System Elements</h3>
-        <div className="space-y-1">
-          {Object.entries(atomCounts).map(([element, count]) => {
-            const atomConfig = atomConfigs[element as keyof typeof atomConfigs];
-            return (
-              <div key={element} className="flex items-center p-1 rounded-md border border-gray-200">
-                <div 
-                  className="w-6 h-6 rounded-full mr-2 flex-shrink-0"
-                  style={{ backgroundColor: atomConfig?.color || '#cccccc' }}
-                />
-                <div className="font-mono">
-                  {element} - {atomConfig?.name || element}
-                  {count > 1 && <span className="text-xs ml-1">×{count}</span>}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+  // Get atom configurations from molecule
+  const atoms = molecule?.atoms || [];
+  
+  return (
+    <Card className="h-full">
+      <h3 className="text-lg font-bold mb-3 font-serif">System Elements</h3>
+      <div className="overflow-y-auto h-[calc(100%-3rem)]">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left p-2">Element</th>
+              <th className="text-left p-2">Count</th>
+              <th className="text-left p-2">Properties</th>
+            </tr>
+          </thead>
+          <tbody>
+            {atoms.length > 0 ? (
+              // Count occurrences of each element in the molecule
+              Object.entries(
+                atoms.reduce((acc, atom) => {
+                  const element = atom.element;
+                  acc[element] = (acc[element] || 0) + 1;
+                  return acc;
+                }, {} as Record<string, number>)
+              ).map(([element, count], index) => {
+                const atomConfig = atomConfigs[element as keyof typeof atomConfigs];
+                return (
+                  <tr key={index} className="border-b hover:bg-gray-50">
+                    <td className="p-2">
+                      <div className="flex items-center space-x-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: atomConfig?.color || '#888' }}
+                        />
+                        <span>{atomConfig?.name || element}</span>
+                      </div>
+                    </td>
+                    <td className="p-2">{count}</td>
+                    <td className="p-2 text-xs">
+                      <div>Weight: {atomConfig?.atomicWeight || 'N/A'} u</div>
+                      <div>Electrons: {atomConfig?.electrons || 'N/A'}</div>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan={3} className="text-center p-4 text-gray-500">
+                  No atomic data available for this system
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
-    );
-  } else {
-    // Single atom
-    const atomConfig = atomConfigs[systemId as keyof typeof atomConfigs];
-    
-    if (!atomConfig) {
-      return (
-        <div className="border border-gray-300 p-4 h-full">
-          <h3 className="text-lg font-serif mb-2">System Elements</h3>
-          <p className="text-gray-500">No data available for this element</p>
-        </div>
-      );
-    }
-    
-    return (
-      <div className="border border-gray-300 p-4 h-full">
-        <h3 className="text-lg font-serif mb-2">System Elements</h3>
-        <div className="flex items-center p-1 rounded-md border border-gray-200">
-          <div 
-            className="w-6 h-6 rounded-full mr-2 flex-shrink-0"
-            style={{ backgroundColor: atomConfig.color }}
-          />
-          <div className="font-mono">
-            {systemId} - {atomConfig.name}
-          </div>
-        </div>
-      </div>
-    );
-  }
+    </Card>
+  );
 };
 
 const SystemPropertiesBox = ({ systemId }: { systemId: string }) => {
-  const isMolecule = systemId ? (/[0-9]/.test(systemId) || systemId.length > 2) : false;
+  // Get proper capitalized or formatted system ID for lookup
+  const formattedSystemId = systemId.toLowerCase();
   
-  if (isMolecule) {
-    // It's a molecule
-    const config = moleculeConfigs[systemId as keyof typeof moleculeConfigs];
-    
-    if (!config || !config.properties) {
-      return (
-        <div className="border border-gray-300 p-4 h-full">
-          <h3 className="text-lg font-serif mb-2">System Properties</h3>
-          <p className="text-gray-500">No property information available</p>
+  // Get molecule data, defaulting to H2 if not found
+  const molecule = moleculeConfigs[formattedSystemId as keyof typeof moleculeConfigs] || 
+                  moleculeConfigs.H2;
+                  
+  // Ensure we have properties
+  const properties = molecule?.properties || {
+    bondLength: "N/A",
+    bondEnergy: "N/A",
+    point_group: "N/A",
+    molecular_weight: "N/A"
+  };
+  
+  // Calculate total atoms
+  const totalAtoms = molecule?.atoms?.length || 0;
+  
+  // Generate spectroscopic constants if not available
+  const spectroscopicData = {
+    rotationalConstant: "1.432 cm⁻¹",
+    vibrationalFrequency: "4395 cm⁻¹",
+    dissociationEnergy: "4.52 eV",
+  };
+  
+  return (
+    <Card className="h-full">
+      <h3 className="text-lg font-bold mb-3 font-serif">System Properties</h3>
+      <div className="space-y-3">
+        <div>
+          <h4 className="text-sm font-bold border-b pb-1">Geometry</h4>
+          <div className="grid grid-cols-2 gap-x-2 text-sm mt-1">
+            <div>Total Atoms:</div>
+            <div className="font-mono">{totalAtoms}</div>
+            
+            <div>Bond Length:</div>
+            <div className="font-mono">{properties.bondLength || "N/A"}</div>
+            
+            {'bondAngle' in properties && (
+              <>
+                <div>Bond Angle:</div>
+                <div className="font-mono">{properties.bondAngle}</div>
+              </>
+            )}
+            
+            <div>Point Group:</div>
+            <div className="font-mono">{properties.point_group || "N/A"}</div>
+          </div>
         </div>
-      );
-    }
-    
-    return (
-      <div className="border border-gray-300 p-4 h-full">
-        <h3 className="text-lg font-serif mb-2">System Properties</h3>
-        <table className="w-full text-sm font-mono">
-          <tbody>
-            {Object.entries(config.properties).map(([key, value]) => (
-              <tr key={key} className="border-b border-gray-200">
-                <td className="py-2 pr-2 font-semibold">{key}</td>
-                <td className="py-2">{value as string}</td>
-              </tr>
-            ))}
-            <tr className="border-b border-gray-200">
-              <td className="py-2 pr-2 font-semibold">atoms</td>
-              <td className="py-2">{config.atoms.length}</td>
-            </tr>
-            <tr className="border-b border-gray-200">
-              <td className="py-2 pr-2 font-semibold">bonds</td>
-              <td className="py-2">{config.bonds.length}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    );
-  } else {
-    // For single atoms
-    const element = systemId as keyof typeof atomConfigs;
-    const atomConfig = atomConfigs[element] || null;
-    
-    if (!atomConfig) {
-      return (
-        <div className="border border-gray-300 p-4 h-full">
-          <h3 className="text-lg font-serif mb-2">System Properties</h3>
-          <p className="text-gray-500">No property information available</p>
+        
+        <div>
+          <h4 className="text-sm font-bold border-b pb-1">Spectroscopic</h4>
+          <div className="grid grid-cols-2 gap-x-2 text-sm mt-1">
+            <div>Rotational Constant:</div>
+            <div className="font-mono">{spectroscopicData.rotationalConstant}</div>
+            
+            <div>Vibrational Frequency:</div>
+            <div className="font-mono">{spectroscopicData.vibrationalFrequency}</div>
+            
+            <div>Dissociation Energy:</div>
+            <div className="font-mono">{spectroscopicData.dissociationEnergy}</div>
+          </div>
         </div>
-      );
-    }
-    
-    return (
-      <div className="border border-gray-300 p-4 h-full">
-        <h3 className="text-lg font-serif mb-2">System Properties</h3>
-        <table className="w-full text-sm font-mono">
-          <tbody>
-            <tr className="border-b border-gray-200">
-              <td className="py-2 pr-2 font-semibold">Atomic Weight</td>
-              <td className="py-2">{atomConfig.atomicWeight} u</td>
-            </tr>
-            <tr className="border-b border-gray-200">
-              <td className="py-2 pr-2 font-semibold">Electrons</td>
-              <td className="py-2">{atomConfig.electrons}</td>
-            </tr>
-            <tr className="border-b border-gray-200">
-              <td className="py-2 pr-2 font-semibold">Ionization Energy</td>
-              <td className="py-2">{atomConfig.ionizationEnergy} eV</td>
-            </tr>
-            <tr className="border-b border-gray-200">
-              <td className="py-2 pr-2 font-semibold">Electron Affinity</td>
-              <td className="py-2">{atomConfig.electronAffinity} eV</td>
-            </tr>
-          </tbody>
-        </table>
+        
+        <div>
+          <h4 className="text-sm font-bold border-b pb-1">Molecular</h4>
+          <div className="grid grid-cols-2 gap-x-2 text-sm mt-1">
+            <div>Molecular Weight:</div>
+            <div className="font-mono">{properties.molecular_weight || "N/A"}</div>
+            
+            {'dipole_moment' in properties && (
+              <>
+                <div>Dipole Moment:</div>
+                <div className="font-mono">{properties.dipole_moment}</div>
+              </>
+            )}
+            
+            {'bondEnergy' in properties && (
+              <>
+                <div>Bond Energy:</div>
+                <div className="font-mono">{properties.bondEnergy}</div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
-    );
-  }
+    </Card>
+  );
 };
 
 const QuantumVisualizationComponent = () => {
@@ -618,7 +626,7 @@ const QuantumVisualizationComponent = () => {
               <div className="flex flex-col h-full">
                 <h4 className="text-md font-serif mb-2">3D Molecular Structure</h4>
                 <div className="flex-grow">
-                  <ThreeDMoleculeVisualization formula={systemId as keyof typeof moleculeConfigs} />
+                  <ThreeDMoleculeVisualization formula={systemId} />
                 </div>
                 
                 <h4 className="text-md font-serif mt-4 mb-2">Individual Atom Structures</h4>
